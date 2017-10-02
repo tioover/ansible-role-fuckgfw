@@ -2,7 +2,10 @@
 
 [Ansible](https://github.com/ansible/ansible) 自动配置翻墙，需要 docker。
 
+**安全性警告**： 配置依赖于 DockerHub 上的镜像：[ipsec-vpn-server](https://hub.docker.com/r/hwdsl2/ipsec-vpn-server/) [v2ray offical](https://hub.docker.com/r/v2ray/official/) 
+
 playbook 使用例子与变量说明
+
 
 `fuckgfw.yml`
 
@@ -32,8 +35,13 @@ ansible-playbook -i hosts docker-setup.yml
 
 防火墙自动配置仅支持 `firewalld`，ufw 等请自己改文件
 
-更成熟的项目： [streisand](https://github.com/jlund/streisand) *Ubuntu Only*s
+更成熟的项目： [streisand](https://github.com/jlund/streisand) *Ubuntu Only*
 
 # TODO
 
 * Tor bridge
+* 多种 VPN 协议
+* sslh
+* Stunnel
+* 改善依赖的可信性，验证，以免被偷偷替换
+* ……你可以发 issue 建议

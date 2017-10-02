@@ -1,0 +1,54 @@
+---
+- name: creates fuckgfw directory
+  file: path={{ fuckgfw_directory }}/fuckgfw state=directory
+
+- name: generate and copy V2Ray config
+  template:
+    src: templates/v2ray.json.j2
+    dest: "{{ fuckgfw_directory }}/v2ray.json"
+
+- name: install and start V2ray
+  docker_container:
+    name: v2ray
+    image: v2ray/official
+    pull: yes
+    volumes:
+      - "{{ fuckgfw_directory }}/v2ray.json:/etc/v2ray/config.json"
+    restart_policy: always
+    state: started
+    ports:
+      - "{{ shadowsocks_port }}:{{ shadowsocks_port }}"
+      - "{{ vmess_port }}:{{ vmess_port }}"
+
+
+- name: install start VPN
+  docker_container:
+    name: vpn
+    image: hwdsl2/ipsec-vpn-server
+    pull: yes
+    privileged: yes
+    volumes:
+      - "/lib/modules:/lib/modules:ro"
+    restart_policy: always
+    state: started
+    env:
+      VPN_IPSEC_PSK: "{{ ipsec_psk }}"
+      VPN_USER: "{{ vpn_user }}"
+      VPN_PASSWORD: "{{ fuckgfw_password }}"
+    ports:
+      - "500:500/udp"
+      - "4500:4500/udp"
+
+- name: update firewall rules
+  firewalld:
+    port: "{{ item }}/tcp"
+    permanent: true
+    state: enabled
+  with_items:
+    - 13583
+    - 14410
+    - "500/udp"
+    - "4500/udp"
+  become: yes
+  become_user: root
+  when: firewalld

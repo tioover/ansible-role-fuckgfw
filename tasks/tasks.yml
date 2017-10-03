@@ -1,0 +1,69 @@
+---
+- name: creates fuckgfw directory
+  file: path={{ fuckgfw_directory }} state=directory  
+
+- name: generate and copy V2Ray config
+  template:
+    src: templates/v2ray.json.j2
+    dest: "{{ fuckgfw_directory }}/v2ray.json"
+
+- name: install and start V2ray
+  docker_container:
+    name: v2ray
+    image: v2ray/official
+    pull: yes
+    volumes:
+      - "{{ fuckgfw_directory }}/v2ray.json:/etc/v2ray/config.json"
+    restart_policy: always
+    state: started
+    ports:
+      - "{{ shadowsocks_port }}:{{ shadowsocks_port }}"
+      - "{{ vmess_port }}:{{ vmess_port }}"
+
+
+- name: install start VPN
+  docker_container:
+    name: vpn
+    image: hwdsl2/ipsec-vpn-server
+    pull: yes
+    privileged: yes
+    volumes:
+      - "/lib/modules:/lib/modules:ro"
+    restart_policy: always
+    state: started
+    env:
+      VPN_IPSEC_PSK: "{{ ipsec_psk }}"
+      VPN_USER: "{{ vpn_user }}"
+      VPN_PASSWORD: "{{ fuckgfw_password }}"
+    ports:
+      - "500:500/udp"
+      - "4500:4500/udp"
+
+  - name: install tor
+    apt: name=tor state=latest update-cache=true
+    become: yes
+
+  - name: install obfs4
+    apt: name=obfs4proxy state=latest
+    become: yes
+
+  - template: config tor
+    src: templates/torrc.j2
+    dest: /etc/tor/torrc
+    mode: 644
+    become: yes
+
+- name: update firewall rules
+  firewalld:
+    port: "{{ item }}/tcp"
+    permanent: true
+    state: enabled
+  with_items:
+    - "{{ shadowsocks_port }}/tcp"
+    - "{{ vmess_port }}/tcp"
+    - "500/udp"
+    - "4500/udp"
+    - "{{ obf4_port }}/tcp"
+  become: yes
+  become_user: root
+  when: firewalld

@@ -1,8 +1,3 @@
-fuckgfw_directory: "{{ ansible_env.HOME }}/fuckgfw"
-fuckgfw_password: W9C22ziz3
-shadowsocks_port: 8959
-vmess_port: 9376
-vmess_uuid: b529638c-d8cb-4c35-ba1f-5f2bfd1d8d00
-ipsec_psk: E3rm6N99g
+fuckgfw_directory: "~/fuckgfw"
 vpn_user: "{{ lookup('env', 'USER') }}"
-firewalld: true
+firewalld: false

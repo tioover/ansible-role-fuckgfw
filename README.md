@@ -28,6 +28,7 @@ touch fuckgfw.yml
     shadowsocks_port: 8959 # shadowsocks 端口
     vmess_port: 9376 # VMess 协议端口
     vmess_uuid: b529638c-d8cb-4c35-ba1f-5f2bfd1d8d00 # VMess 协议 UUID，自己随机生成
+    obfs4_port: 4948 # Tor obf4 端口
     ipsec_psk: E3rm6N99g # IPSEC 共享密钥
     firewalld: true # firewalld 防火墙自动配置，如果没有防火墙，或者不用 firewalld 请设为 false
   roles:

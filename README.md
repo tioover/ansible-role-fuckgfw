@@ -32,7 +32,6 @@ touch fuckgfw.yml
     obfs4_port: 4948 # Tor obf4 端口
     tor_nickname: anonymous # Tor 网桥昵称
     ipsec_psk: E3rm6N99g # IPSEC 共享密钥
-    firewalld: true # firewalld 防火墙自动配置，如果没有防火墙，或者不用 firewalld 请设为 false
   roles:
     - fuckgfw
 ~~~
@@ -54,10 +53,8 @@ ansible-playbook -i hosts docker-setup.yml
 
 # TODO
 
-[x] Tor bridge
-[] 多种 VPN 协议
-[] sslh
-[] Stunnel
-[] 验证依赖的可信性，以免被偷偷替换
+- [x] Tor bridge
+- [ ] 多种协议，混淆流量
+- [ ] 验证依赖的可信性，以免被偷偷替换
 
 ……发 issue 建议

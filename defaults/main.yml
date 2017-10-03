@@ -1,3 +1,2 @@
-fuckgfw_directory: "~/fuckgfw"
 vpn_user: "{{ lookup('env', 'USER') }}"
 firewalld: false

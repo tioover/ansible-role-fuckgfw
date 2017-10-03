@@ -1,6 +1,6 @@
 ---
 - name: creates fuckgfw directory
-  file: path={{ fuckgfw_directory }} state=directory  
+  file: path={{ fuckgfw_directory }} state=directory 
 
 - name: generate and copy V2Ray config
   template:
@@ -39,25 +39,27 @@
       - "500:500/udp"
       - "4500:4500/udp"
 
-  - name: install tor
-    apt: name=tor state=latest update-cache=true
-    become: yes
+- name: install tor
+  apt: name=tor state=latest update-cache=true
+  become: yes
+  become_user: root
 
-  - name: install obfs4
-    apt: name=obfs4proxy state=latest
-    become: yes
+- name: install obfs4
+  apt: name=obfs4proxy state=latest
+  become: yes
+  become_user: root
 
-  - template: config tor
+- name: config tor
+  template:
     src: templates/torrc.j2
     dest: /etc/tor/torrc
     mode: 644
-    become: yes
+  become: yes
+  become_user: root
 
-- name: update firewall rules
-  firewalld:
-    port: "{{ item }}/tcp"
-    permanent: true
-    state: enabled
+
+- name: update fuck GFW firewall rules
+  shell: ufw allow {{ item }}
   with_items:
     - "{{ shadowsocks_port }}/tcp"
     - "{{ vmess_port }}/tcp"
@@ -66,4 +68,4 @@
     - "{{ obf4_port }}/tcp"
   become: yes
   become_user: root
-  when: firewalld
+  

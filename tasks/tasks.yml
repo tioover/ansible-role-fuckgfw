@@ -20,6 +20,8 @@
       - "{{ shadowsocks_port }}:{{ shadowsocks_port }}"
       - "{{ vmess_port }}:{{ vmess_port }}"
 
+- name: load NETKEY
+  modprobe: name=tcp_bbr
 
 - name: install start VPN
   docker_container:
@@ -39,6 +41,19 @@
       - "500:500/udp"
       - "4500:4500/udp"
 
+# check https://bugs.launchpad.net/ubuntu/+source/tor/+bug/1568435
+- name: workaround ubuntu tor obfs4 bug
+  copy:
+    src: files/tor.apparmor-profile.abstraction
+    dest: /etc/apparmor.d/abstractions/tor
+    mode: 644
+  become: yes
+  become_user: root
+
+- shell: apparmor_parser -r /etc/apparmor.d/system_tor
+  become: yes
+  become_user: root
+
 - name: install tor
   apt: name=tor state=latest update-cache=true
   become: yes
@@ -57,6 +72,12 @@
   become: yes
   become_user: root
 
+- name: restart tor
+  service:
+    name: tor
+    state: restarted
+  become: yes
+  become_user: root
 
 - name: update fuck GFW firewall rules
   shell: ufw allow {{ item }}
@@ -65,7 +86,6 @@
     - "{{ vmess_port }}/tcp"
     - "500/udp"
     - "4500/udp"
-    - "{{ obf4_port }}/tcp"
+    - "{{ obfs4_port }}/tcp"
   become: yes
   become_user: root
-  

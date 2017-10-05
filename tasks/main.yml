@@ -1,2 +1,2 @@
 ---
-- { include: tasks.yml, become: yes, become_user: "{{ docker_admin }}" }
+- { include: tasks.yml, become: yes, become_user: root }

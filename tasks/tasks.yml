@@ -1,83 +1,81 @@
----
-- name: creates fuckgfw directory
-  file: path={{ fuckgfw_directory }} state=directory 
-
-- name: generate and copy V2Ray config
-  template:
-    src: templates/v2ray.json.j2
-    dest: "{{ fuckgfw_directory }}/v2ray.json"
-
-- name: install and start V2ray
-  docker_container:
-    name: v2ray
-    image: v2ray/official
-    pull: yes
-    volumes:
-      - "{{ fuckgfw_directory }}/v2ray.json:/etc/v2ray/config.json"
-    restart_policy: always
-    state: started
-    ports:
-      - "{{ shadowsocks_port }}:{{ shadowsocks_port }}"
-      - "{{ vmess_port }}:{{ vmess_port }}"
-
 - name: load NETKEY
   modprobe: name=tcp_bbr
 
-- name: install start VPN
-  docker_container:
-    name: vpn
-    image: hwdsl2/ipsec-vpn-server
-    pull: yes
-    privileged: yes
-    volumes:
-      - "/lib/modules:/lib/modules:ro"
-    restart_policy: always
-    state: started
-    env:
-      VPN_IPSEC_PSK: "{{ ipsec_psk }}"
-      VPN_USER: "{{ vpn_user }}"
-      VPN_PASSWORD: "{{ fuckgfw_password }}"
-    ports:
-      - "500:500/udp"
-      - "4500:4500/udp"
+- name: about docker
+  become_user: "{{ docker_admin }}"
+  become: true
+  block:
+  - name: creates fuckgfw directory
+    file: path={{ fuckgfw_directory }} state=directory 
 
-# check https://bugs.launchpad.net/ubuntu/+source/tor/+bug/1568435
-- name: workaround ubuntu tor obfs4 bug
-  copy:
-    src: files/tor.apparmor-profile.abstraction
-    dest: /etc/apparmor.d/abstractions/tor
-    mode: 644
-  become: yes
-  become_user: root
+  - name: generate and copy V2Ray config
+    template:
+      src: templates/v2ray.json.j2
+      dest: "{{ fuckgfw_directory }}/v2ray.json"
 
-- shell: apparmor_parser -r /etc/apparmor.d/system_tor
-  become: yes
-  become_user: root
+  - name: install and start V2ray
+    docker_container:
+      name: v2ray
+      image: v2ray/official
+      pull: yes
+      volumes:
+        - "{{ fuckgfw_directory }}/v2ray.json:/etc/v2ray/config.json"
+      restart_policy: always
+      state: started
+      ports:
+        - "{{ shadowsocks_port }}:{{ shadowsocks_port }}"
+        - "{{ vmess_port }}:{{ vmess_port }}"
 
-- name: install tor
-  apt: name=tor state=latest update-cache=true
-  become: yes
-  become_user: root
 
-- name: install obfs4
-  apt: name=obfs4proxy state=latest
-  become: yes
-  become_user: root
+  - name: install start VPN
+    docker_container:
+      name: vpn
+      image: hwdsl2/ipsec-vpn-server
+      pull: yes
+      privileged: yes
+      volumes:
+        - "/lib/modules:/lib/modules:ro"
+      restart_policy: always
+      state: started
+      env:
+        VPN_IPSEC_PSK: "{{ ipsec_psk }}"
+        VPN_USER: "{{ vpn_user }}"
+        VPN_PASSWORD: "{{ fuckgfw_password }}"
+      ports:
+        - "500:500/udp"
+        - "4500:4500/udp"
 
-- name: config tor
-  template:
-    src: templates/torrc.j2
-    dest: /etc/tor/torrc
-    mode: 644
-  become: yes
-  become_user: root
 
-- name: restart tor
-  service:
-    name: tor
-    state: restarted
-  become: yes
-  become_user: root
+# - name: server sudo
+#   become_user: "{{ docker_admin }}"
+#   become: true
+#   block:
+#   # check https://bugs.launchpad.net/ubuntu/+source/tor/+bug/1568435
+#   - name: workaround ubuntu tor obfs4 bug
+#     copy:
+#       src: files/tor.apparmor-profile.abstraction
+#       dest: /etc/apparmor.d/abstractions/tor
+#       mode: 0644
+#     become: yes
+
+#   - shell: apparmor_parser -r /etc/apparmor.d/system_tor
+
+#   - name: install tor
+#     apt: name=tor state=latest update-cache=true
+
+#   - name: install obfs4
+#     apt: name=obfs4proxy state=latest
+
+#   - name: config tor
+#     template:
+#       src: templates/torrc.j2
+#       dest: /etc/tor/torrc
+#       mode: 0644
+
+#   - name: restart tor
+#     service:
+#       name: tor
+#       state: restarted
 
 - name: update fuck GFW firewall rules
   shell: ufw allow {{ item }}
@@ -86,6 +84,4 @@
     - "{{ vmess_port }}/tcp"
     - "500/udp"
     - "4500/udp"
-    - "{{ obfs4_port }}/tcp"
-  become: yes
-  become_user: root
+    # - "{{ obfs4_port }}/tcp"

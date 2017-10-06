@@ -1,5 +1,5 @@
 - name: load NETKEY
-  modprobe: name=tcp_bbr
+  modprobe: name=af_key
 
 - name: about docker
   become_user: "{{ docker_admin }}"
